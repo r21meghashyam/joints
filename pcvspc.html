@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        table, tr, td {
+            border:1px solid #000;
+            border-collapse: collapse;
+        }
+        table{
+            width:500px;
+            height:500px;
+            margin:10px;
+            
+        }
+        .red {
+            background: red;
+        }
+        .darkred {
+            background: darkred;
+        }
+        .blue {
+            background: blue;
+        }
+        .darkblue {
+            background: darkblue;
+        }
+    </style>
+</head>
+<body>
+    <table>
+        <script>
+            table="";
+            for(i=0;i<10;i++){
+                table+="<tr>";
+                for(j=0;j<10;j++)
+                    table+="<td id="+i+"."+j+"></td>";
+                table+="</tr>";
+            }
+            document.write(table);
+        </script>
+    </table>
+    <p>Turn: <span id="turn">blue</span></p>
+    <p>RED: <span id="redscore">0</span></p>
+    <p>BLUE: <span id="bluescore">0</span></p>
+    <script>
+        td=document.getElementsByTagName('td');
+        i=String(Math.random()).substring(2)[0];
+        j=String(Math.random()).substring(2)[0];
+        document.getElementById(i+'.'+j).className="red";
+        turn="blue";
+        function pcVsPlayer(){
+            for(i=0;i<td.length;i++){
+                td[i].onclick=action;
+            }
+        }
+        
+        function pcVspc(){
+            console.log(turn);
+            let empty=0;
+            for(let i=0;i<td.length;i++)
+                if(td[i].className==="")
+                    empty++;
+            if(empty)
+                setTimeout(()=>{
+                    if(turn=="blue"){
+                        ai32();
+                        
+                    }
+                    else{
+                        ai1();
+                        
+                    }
+                    pcVspc();
+                },1000);
+                
+        }  
+        pcVspc();
+        
+        function action(e){
+            move(e);
+            setTimeout(ai3,1000);
+        }
+        function check(i,j){
+            var col = document.getElementById(i+'.'+j);
+            if(col&&col.className)
+                return col.className;
+            return false;
+        }
+        function move(e){
+               // if(e.type=='click'&&turn=='red')
+                 //   return;
+                id = e.target.id.split('.');
+                i = Number(id[0]);
+                j = Number(id[1]);
+                pass = false;
+                change = true;
+                
+            /*
+                (1,1)   (1,2)   (1,3)
+                (2,1)   (2,2)   (2,3)
+                (3,1)   (3,2)   (3,3)                    
+
+                i-1 j
+                i j-1
+                i j+1
+                i+1 j
+            */
+            console.log(turn,i,j);
+            if(check(i-1,j))
+                pass = true;
+            if(check(i,j-1))
+                pass = true;
+            if(check(i,j+1))
+                pass = true;
+            if(check(i+1,j))
+                pass = true;
+            if(check(i,j))
+                pass= false;
+            
+            if(pass){
+                document.getElementById(i+"."+j).className=turn;
+                left=0;
+                right=0;
+                up=0;
+                down=0;
+
+                //left check
+                i2=i;
+                j2=j-1;
+                while(check(i2,j2)==turn){
+                    left++;
+                    j2--;
+                }
+                //right check
+                j2=j+1;
+                while(check(i2,j2)==turn){
+                    right++;
+                    j2++;
+                }
+                //up check
+                i2=i-1;
+                j2=j;
+                while(check(i2,j2)==turn){
+                    up++;
+                    i2--;
+                }
+                //down check
+                i2=i+1;
+                while(check(i2,j2)==turn){
+                    down++;
+                    i2++;
+                }
+                
+                if(left+1+right>2){
+                    while(left){
+                        document.getElementById(i+"."+(j-left)).className='dark'+turn;    
+                        left--;
+                    }
+                    document.getElementById(i+"."+j).className='dark'+turn; 
+                    while(right){
+                        document.getElementById(i+"."+(j+right)).className='dark'+turn;    
+                        right--;
+                    }
+                    change=false;
+                }
+
+                if(up+1+down>2){
+                    while(up){
+                        document.getElementById((i-up)+"."+j).className='dark'+turn;    
+                        up--;
+                    }
+                    document.getElementById(i+"."+j).className='dark'+turn; 
+                    while(down){
+                        document.getElementById((i+down)+"."+j).className='dark'+turn;    
+                        down--;
+                    }
+                    change=false;
+                }
+                
+                    
+                if(change)
+                    turn = turn=="red"?"blue":"red";
+            }
+            redscore=document.getElementsByClassName("darkred").length;
+            document.getElementById("redscore").innerHTML=redscore;
+            bluescore=document.getElementsByClassName("darkblue").length;
+            document.getElementById("bluescore").innerHTML=bluescore;
+            
+            document.getElementById("turn").innerHTML=turn;
+            console.log(pass,change);
+            return pass&&turn==='blue';
+        }
+        function ai1(){
+            if(turn=='blue')
+                return;
+            let map=[];
+            for(let i=0;i<10;i++){
+                for(let j=0;j<10;j++){
+                    let pass=false;
+                    if(check(i-1,j))
+                        pass = true;
+                    if(check(i,j-1))
+                        pass = true;
+                    if(check(i,j+1))
+                        pass = true;
+                    if(check(i+1,j))
+                        pass = true;
+                    if(check(i,j))
+                        pass= false;
+                    if(pass)
+                        map.push([i,j]);
+                }
+            }
+            let choice = Number(String(Math.random()).substr(2))%map.length;
+            let i = map[choice][0];
+            let j = map[choice][1];
+            let s = move({target:document.getElementById(i+'.'+j)});
+            console.log('AI TURN',i,j);
+            if(!s)
+                setTimeout(ai1,1000);
+        }
+        function isRed(i,j){
+            return check(i,j)&&document.getElementById(i+'.'+j).className=='red';
+        }
+        function isBlue(i,j){
+            return check(i,j)&&document.getElementById(i+'.'+j).className=='blue';
+        }
+        function isEmpty(i,j){
+            return check(i,j)&&document.getElementById(i+'.'+j).className=='red';
+        }
+
+        function ai2(){
+            if(turn=='blue')
+                return;
+            let choices=[];
+            for(let i=0;i<10;i++){
+                for(let j=0;j<10;j++){
+                    let pass=false;
+                    if(check(i-1,j))
+                        pass = true;
+                    if(check(i,j-1))
+                        pass = true;
+                    if(check(i,j+1))
+                        pass = true;
+                    if(check(i+1,j))
+                        pass = true;
+                    if(check(i,j))
+                        pass= false;
+                    if(pass)
+                        choices.push([i,j,0]);
+                }
+            }
+            let choice = choices.map(i=>{
+                if(isRed(i[0]-1,i[1]))
+                    i[2]++;
+                if(isRed(i[0],i[1]-1))
+                    i[2]++;
+                if(isRed(i[0],i[1]+1))
+                    i[2]++;
+                if(isRed(i[0]+1,i[1]))
+                    i[2]++;
+                
+                return i;
+            }).map(i=>{
+                if(isRed(i[0]-1,i[1])&&isRed(i[0]-2,i[1]))
+                    i[2]++;
+                if(isRed(i[0],i[1]-1)&&isRed(i[0],i[1]-2))
+                    i[2]++;
+                if(isRed(i[0],i[1]+1)&&isRed(i[0],i[1]+2))
+                    i[2]++;
+                if(isRed(i[0]+1,i[1])&&isRed(i[0]+2,i[1]))
+                    i[2]++;
+                
+                return i;
+            }).sort((i,j)=>j[2]-i[2]);
+            console.log(choice);
+            choice = choice[0];
+            //let choice = Number(String(Math.random()).substr(2))%map.length;
+            let i = choice[0];
+            let j = choice[1];
+            let s = move({target:document.getElementById(i+'.'+j)});
+            
+            
+        }
+        function ai3(){
+            if(turn=='blue')
+                return;
+            let choices=[];
+            for(let i=0;i<10;i++){
+                for(let j=0;j<10;j++){
+                    let pass=false;
+                    if(check(i-1,j))
+                        pass = true;
+                    if(check(i,j-1))
+                        pass = true;
+                    if(check(i,j+1))
+                        pass = true;
+                    if(check(i+1,j))
+                        pass = true;
+                    if(check(i,j))
+                        pass= false;
+                    if(pass)
+                        choices.push([i,j,0]);
+                }
+            }
+            let choice = choices.map(i=>{
+                if(isRed(i[0]-1,i[1]))
+                    i[2]++;
+                if(isRed(i[0],i[1]-1))
+                    i[2]++;
+                if(isRed(i[0],i[1]+1))
+                    i[2]++;
+                if(isRed(i[0]+1,i[1]))
+                    i[2]++;
+                
+                return i;
+            }).map(i=>{
+                if(isRed(i[0]-1,i[1])&&isRed(i[0]-2,i[1]))
+                    i[2]++;
+                if(isRed(i[0],i[1]-1)&&isRed(i[0],i[1]-2))
+                    i[2]++;
+                if(isRed(i[0],i[1]+1)&&isRed(i[0],i[1]+2))
+                    i[2]++;
+                if(isRed(i[0]+1,i[1])&&isRed(i[0]+2,i[1]))
+                    i[2]++;
+                
+                return i;
+            }).map(i=>{
+                if(isBlue(i[0]-1,i[1])&&isBlue(i[0]-2,i[1]))
+                    i[2]+=2;
+                if(isBlue(i[0],i[1]-1)&&isBlue(i[0],i[1]-2))
+                    i[2]+=2;
+                if(isBlue(i[0],i[1]+1)&&isBlue(i[0],i[1]+2))
+                    i[2]+=2;
+                if(isBlue(i[0]+1,i[1])&&isBlue(i[0]+2,i[1]))
+                    i[2]+=2;
+                if(isBlue(i[0]+1,i[1])&&isBlue(i[0]-1,i[1]))
+                    i[2]+=2;
+                if(isBlue(i[0],i[1]-1)&&isBlue(i[0],i[1]+1))
+                    i[2]+=2;
+                return i;
+            }).sort((i,j)=>j[2]-i[2]);
+            console.log(choice);
+            choice = choice[0];
+            //let choice = Number(String(Math.random()).substr(2))%map.length;
+            let i = choice[0];
+            let j = choice[1];
+            let s = move({target:document.getElementById(i+'.'+j)});
+            
+            if(!s)
+                setTimeout(ai3,1000);
+        }
+        function ai32(){
+            if(turn=='red')
+                return;
+            let choices=[];
+            for(let i=0;i<10;i++){
+                for(let j=0;j<10;j++){
+                    let pass=false;
+                    if(check(i-1,j))
+                        pass = true;
+                    if(check(i,j-1))
+                        pass = true;
+                    if(check(i,j+1))
+                        pass = true;
+                    if(check(i+1,j))
+                        pass = true;
+                    if(check(i,j))
+                        pass= false;
+                    if(pass)
+                        choices.push([i,j,0]);
+                }
+            }
+            let choice = choices.map(i=>{
+                if(isBlue(i[0]-1,i[1]))
+                    i[2]++;
+                if(isBlue(i[0],i[1]-1))
+                    i[2]++;
+                if(isBlue(i[0],i[1]+1))
+                    i[2]++;
+                if(isBlue(i[0]+1,i[1]))
+                    i[2]++;
+                
+                return i;
+            }).map(i=>{
+                if(isBlue(i[0]-1,i[1])&&isBlue(i[0]-2,i[1]))
+                    i[2]++;
+                if(isBlue(i[0],i[1]-1)&&isBlue(i[0],i[1]-2))
+                    i[2]++;
+                if(isBlue(i[0],i[1]+1)&&isBlue(i[0],i[1]+2))
+                    i[2]++;
+                if(isBlue(i[0]+1,i[1])&&isBlue(i[0]+2,i[1]))
+                    i[2]++;
+                
+                return i;
+            }).map(i=>{
+                if(isRed(i[0]-1,i[1])&&isRed(i[0]-2,i[1]))
+                    i[2]+=2;
+                if(isRed(i[0],i[1]-1)&&isRed(i[0],i[1]-2))
+                    i[2]+=2;
+                if(isRed(i[0],i[1]+1)&&isRed(i[0],i[1]+2))
+                    i[2]+=2;
+                if(isRed(i[0]+1,i[1])&&isRed(i[0]+2,i[1]))
+                    i[2]+=2;
+                if(isRed(i[0]+1,i[1])&&isRed(i[0]-1,i[1]))
+                    i[2]+=2;
+                if(isRed(i[0],i[1]-1)&&isRed(i[0],i[1]+1))
+                    i[2]+=2;
+                return i;
+            }).sort((i,j)=>j[2]-i[2]);
+            console.log(choice);
+            choice = choice[0];
+            //let choice = Number(String(Math.random()).substr(2))%map.length;
+            let i = choice[0];
+            let j = choice[1];
+            let s = move({target:document.getElementById(i+'.'+j)});
+            
+            
+        }
+        
+    </script>
+</body>
+</html>
